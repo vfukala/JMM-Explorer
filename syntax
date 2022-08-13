@@ -1,0 +1,18 @@
+<identifier>				<- [A-Z,a-z,_,$][A-Z,a-z,_,$,0-9]*
+<int-literal>				<- [0-9]+
+
+<incdec-op>					<- ++ | --
+<additive-op>				<- + | -
+<multiplicative-op>			<- * | / | %
+
+<unary-expression>			<- <literal> | ( <expression> )
+<multiplicative-expression> <- <unary-expression> | <multiplicative-expression> <multiplicative-op> <unary-expression>
+<expression>				<- <multiplicative-expression> | <multiplicative-expression> <additive-op> <expression>
+
+<method-call>				<- <identifier> . <identifier> ( ) ;
+<assignment-statement>		<- <identifier> <assignment-op> <expression> ;
+<incdec-statement>			<- <identifier> <incdec-op> ;
+
+<statement>					<- <method-call> | <assignment-statement> | <indec-statement>
+
+<program> 					<- <statement> <program> |

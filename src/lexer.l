@@ -12,13 +12,17 @@ using token = JMMExplorer::JMMEParser::token;
 %option yyclass="JMMExplorer::JMMEScanner"
 %option noyywrap
 %option c++
+%option yylineno
 
 %%
 %{
 				yylval = lval;
+				location->begin.line = location->end.line = yylineno;
 %}
 
 ;				{ return token::SEMIC; }
+\+\+			{ yylval->build<IncdecOpType>(IncdecOpType::Increment); return token::INCDEC_OP; }
+\-\-			{ yylval->build<IncdecOpType>(IncdecOpType::Decrement); return token::INCDEC_OP; }
 \+				{ yylval->build<AdditiveOpType>(AdditiveOpType::Add); return token::ADDITIVE_OP; }
 \-				{ yylval->build<AdditiveOpType>(AdditiveOpType::Subtract); return token::ADDITIVE_OP; }
 \*				{ yylval->build<MultiplicativeOpType>(MultiplicativeOpType::Multiply); return token::MULTIPLICATIVE_OP; }

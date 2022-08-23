@@ -126,7 +126,7 @@ void Snippet::print(std::ostream& os) const
 		if (std::holds_alternative<LockInstruction>(vari))
 			os << "lock " << std::get<LockInstruction>(vari).monitor_name << '\n';
 		else if (std::holds_alternative<UnlockInstruction>(vari))
-			os << "unlock " << std::get<LockInstruction>(vari).monitor_name << '\n';
+			os << "unlock " << std::get<UnlockInstruction>(vari).monitor_name << '\n';
 		else if (std::holds_alternative<ArithmeticInstruction>(vari))
 		{
 			const auto& ari = std::get<ArithmeticInstruction>(vari);

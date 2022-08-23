@@ -5,6 +5,7 @@
 %define api.parser.class {JMMEParser}
 
 %define api.value.type variant
+%define parse.error detailed
 
 %code requires
 {

@@ -1,0 +1,12 @@
+monitor.lock();
+scounter++;
+monitor.unlock();
+monitor.lock();
+scounter++;
+monitor.unlock();
+monitor.lock();
+scounter++;
+monitor.unlock();
+monitor.lock();
+print(scounter);
+monitor.unlock();

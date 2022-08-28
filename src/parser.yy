@@ -51,7 +51,7 @@ class JMMEScanner;
 %token ASSIGN
 %token<ArithmeticOpType> ASSIGN_OP
 
-%nterm<Snippet::LocalValue> expression unary_expression multiplicative_expression
+%nterm<LocalValue> expression unary_expression multiplicative_expression
 
 %nterm statement static_call method_call assignment_statement assignment_op_statement incdec_statement
 
@@ -93,7 +93,7 @@ assignment_op_statement:
 ;
 
 incdec_statement:
-	IDENT INCDEC_OP SEMIC { ctx.emit_op_write($1, Snippet::LocalValue::from_literal(1), to_arithmetic_type($2), @1); }
+	IDENT INCDEC_OP SEMIC { ctx.emit_op_write($1, LocalValue::from_literal(1), to_arithmetic_type($2), @1); }
 ;
 
 expression:
@@ -107,7 +107,7 @@ multiplicative_expression:
 ;
 
 unary_expression:
-	INTLIT { $$ = Snippet::LocalValue::from_literal($1); }
+	INTLIT { $$ = LocalValue::from_literal($1); }
 	| IDENT { $$ = ctx.emit_read($1, @1); }
 	| LPAREN expression RPAREN { $$ = $2; }
 ;

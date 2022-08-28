@@ -1,0 +1,3 @@
+l2 = sy;
+print(l2);
+sx = l2;

@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-g
+CXXFLAGS=-g -Wall -Wextra -O3
 CPPFLAGS=-Ibin -Isrc
 
 SRC_FILES := $(wildcard src/*.cpp)
@@ -9,7 +9,7 @@ D_FILES := $(patsubst src/%.cpp,bin/%.d,$(SRC_FILES))
 D_FILES += bin/parser.d bin/lexer.d
 
 bin/jmmexplorer: $(OBJ_FILES)
-	$(CXX) $(OBJ_FILES) -o bin/jmmexplorer
+	$(CXX) $(OBJ_FILES) -o bin/jmmexplorer $(LDFLAGS)
 
 bin/parser.cpp bin/parser.hpp: src/parser.yy
 	bison src/parser.yy --defines=bin/parser.hpp -o bin/parser.cpp

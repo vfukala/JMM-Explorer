@@ -157,6 +157,29 @@ void run_all_tests()
 		TestCase{ true, { "print(1/shared);", "shared=1;" }, {
 			{ RegularExecutionResult{ { 1 }, { } } },
 			{ ExceptedExecutionResult{ 0, 1 } }
+		} },
+		// 14
+		TestCase{ true, { "print(1/sx);sy=1;", "print(1/sy);sx=1;" }, {
+			{ RegularExecutionResult{ { 1 }, { 1 } } },
+			{ ExceptedExecutionResult{ 0, 1 } },
+			{ ExceptedExecutionResult{ 1, 1 } },
+		} },
+		// 15
+		TestCase{ true, { "m.lock();print(sx);sy=1;m.unlock();", "m.lock();print(sy);sx=1;m.unlock();" }, {
+			{ RegularExecutionResult{ { 0 }, { 1 } } },
+			{ RegularExecutionResult{ { 1 }, { 0 } } }
+		} },
+		// 16
+		TestCase{ true, { "m0.lock();print(sx);sy=1;m0.unlock();", "m1.lock();print(sy);sx=1;m1.unlock();" }, {
+			{ RegularExecutionResult{ { 0 }, { 0 } } },
+			{ RegularExecutionResult{ { 0 }, { 1 } } },
+			{ RegularExecutionResult{ { 1 }, { 0 } } },
+			{ RegularExecutionResult{ { 1 }, { 1 } } }
+		} },
+		// 17
+		TestCase{ true, { "mother.lock();mother.unlock();m.lock();m.lock();m.lock();print(sx);m.unlock();sy=1;m.unlock();m.unlock();", "moo.lock();m.lock();moo.unlock();print(sy);sx=1;moo.lock();m.unlock();moo.unlock();" }, {
+			{ RegularExecutionResult{ { 0 }, { 1 } } },
+			{ RegularExecutionResult{ { 1 }, { 0 } } }
 		} }
 	};
 	uint32_t errored_count = 0;

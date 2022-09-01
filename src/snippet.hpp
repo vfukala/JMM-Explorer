@@ -149,6 +149,8 @@ public:
 	int32_t read_write(uint32_t action_index);
 	const vec<uint32_t>& get_write_dependencies(uint32_t action_index) const;
 	void supply_read_value(uint32_t action_index, int32_t value);
+	bool is_zerodiv_excepted() const;
+	uint32_t get_excepted_line() const;
 
 private:
 	str name;
@@ -173,6 +175,7 @@ private:
 	void request_eval(uint32_t instri);
 
 	bool zerodiv_excepted;
+	uint32_t excepted_at_line;
 };
 
 }

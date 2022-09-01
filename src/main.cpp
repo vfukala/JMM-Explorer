@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <limits>
+#include <memory>
+#include <variant>
 
 #include "jmme-scanner.hpp"
 #include "parser.hpp"
@@ -10,31 +12,46 @@
 namespace JMMExplorer
 {
 
-void run(const int argc, const char *const *const argv)
+typedef vec<vec<int32_t>> RegularExecutionResult;
+
+struct ExceptedExecutionResult
+{
+	uint32_t ex_thread;
+	uint32_t ex_line;
+
+	bool operator==(const ExceptedExecutionResult& other) const
+	{
+		return ex_thread == other.ex_thread && ex_line == other.ex_line;
+	}
+};
+
+struct ExecutionResult
+{
+	std::variant<RegularExecutionResult, ExceptedExecutionResult> result;
+
+	bool operator==(const ExecutionResult& other) const
+	{
+		return result.index() == other.result.index()
+			&& (result.index() == 0 ? std::get<RegularExecutionResult>(result) == std::get<RegularExecutionResult>(other.result)
+									: std::get<ExceptedExecutionResult>(result) == std::get<ExceptedExecutionResult>(other.result));
+	}
+
+	bool operator!=(const ExecutionResult& other) const
+	{
+		return !(*this == other);
+	}
+};
+
+bool analyze(const vec<std::string>& filenames, const vec<std::istream*>& inputs, vec<ExecutionResult>& results, std::ostream& err_out)
 {
 	vec<Snippet> snps;
-	snps.reserve(argc - 1);
-	bool nonexisting_file = false;
-	for (int i = 1; i < argc; i++)
+	snps.reserve(inputs.size());
+	for (uint32_t i = 0; i < inputs.size(); i++)
 	{
-		snps.push_back(Snippet(argv[i]));
-		std::ifstream ifs;
-		ifs.open(argv[i]);
-		if (!ifs)
-		{
-			std::cerr << "Error: Source file " << argv[i] << " doesn't exist." << std::endl;
-			nonexisting_file = true;
-			continue;
-		}
-		JMMEScanner scn(&ifs);
+		snps.push_back(Snippet(filenames[i]));
+		JMMEScanner scn(inputs[i]);
 		JMMEParser prs(scn, snps.back());
 		prs();
-		ifs.close();
-	}
-	if (nonexisting_file)
-	{
-		std::cout << "Terminating due to a non-existing source file." << std::endl;
-		return;
 	}
 	bool invalid_monitors = false;
 	for (const Snippet& snp : snps)
@@ -50,7 +67,7 @@ void run(const int argc, const char *const *const argv)
 				const Ident mname = action.get_monitor_name();
 				if (locked[mname] == 0)
 				{
-					std::cerr << "Error: Unlocking monitor " << mname << " in " << snp.get_name() << " at " << action.location << std::endl;
+					err_out << "Error: Unlocking monitor " << mname << " in " << snp.get_name() << " at " << action.location << std::endl;
 					invalid_monitors = true;
 				}
 				else
@@ -60,8 +77,8 @@ void run(const int argc, const char *const *const argv)
 	}
 	if (invalid_monitors)
 	{
-		std::cout << "Terminating due to invalid monitor use." << std::endl;
-		return;
+		err_out << "Terminating due to invalid monitor use." << std::endl;
+		return true;
 	}
 	using std::pair;
 	vec<pair<uint32_t, uint32_t>> to_thread_action;
@@ -90,7 +107,6 @@ void run(const int argc, const char *const *const argv)
 	}
 	for (Snippet& snp : snps)
 		snp.run_preexecution_analysis();
-	vec<vec<vec<int32_t>>> all_outputs;
 	while (true)
 	{
 		// use SO here
@@ -255,8 +271,6 @@ void run(const int argc, const char *const *const argv)
 
 				// use write seen
 				
-				// TODO handle zerodiv exception
-
 				for (Snippet& snp : snps)
 					snp.prepare_execution();
 
@@ -282,6 +296,9 @@ void run(const int argc, const char *const *const argv)
 					}
 				}
 
+				bool excepted = false;
+				uint32_t excepted_thread, excepted_line;
+
 				vec<uint32_t> ready;
 				for (uint32_t i = 0; i < reads.size(); i++)
 					if (outstanding[i] == 0)
@@ -297,8 +314,17 @@ void run(const int argc, const char *const *const argv)
 					const int32_t val = write_seen[cur] != -1 ? [&]()
 					{ 
 						const pair<uint32_t, uint32_t> writeti = to_thread_action[write_seen[cur]];
-						return snps[writeti.first].read_write(writeti.second);
+						const int32_t value = snps[writeti.first].read_write(writeti.second);
+						if (snps[writeti.first].is_zerodiv_excepted())
+						{
+							excepted = true;
+							excepted_thread = writeti.first;
+							excepted_line = snps[writeti.first].get_excepted_line();
+						}
+						return value;
 					}() : 0;
+					if (excepted)
+						break;
 					snps[readti.first].supply_read_value(readti.second, val);
 					for (const uint32_t dependent : used_by[cur])
 					{
@@ -308,15 +334,34 @@ void run(const int argc, const char *const *const argv)
 
 					}
 				}
-				if (reads_done == reads.size())
+				if (!excepted && reads_done == reads.size())
 				{
 					vec<vec<int32_t>> newout;
-					for (Snippet& snp : snps)
+					for (uint32_t i = 0; i < snps.size(); i++)
+					{
+						Snippet& snp = snps[i];
 						newout.push_back(snp.get_execution_results());
-					if (std::all_of(all_outputs.begin(), all_outputs.end(), [&newout](const vec<vec<int32_t>>& thisout){ return thisout != newout; }))
-						all_outputs.push_back(newout);
+						if (snp.is_zerodiv_excepted())
+						{
+							excepted = true;
+							excepted_thread = i;
+							excepted_line = snp.get_excepted_line();
+							break;
+						}
+					}
+					if (!excepted)
+					{
+						const ExecutionResult res{ newout };
+						if (std::all_of(results.begin(), results.end(), [&res](const ExecutionResult& thisout){ return thisout != res; }))
+							results.push_back(res);
+					}
 				}
-
+				if (excepted)
+				{
+					const ExecutionResult res{ ExceptedExecutionResult{ excepted_thread, excepted_line } };
+					if (std::all_of(results.begin(), results.end(), [&res](const ExecutionResult& thisout){ return thisout != res; }))
+						results.push_back(res);
+				}
 				// update write seen index array
 				if (write_seen_i.empty())
 					break;
@@ -390,28 +435,59 @@ void run(const int argc, const char *const *const argv)
 		if (!updated)
 			break;
 	}
-	for (const vec<vec<int32_t>>& out : all_outputs)
+	return false;
+}
+
+void run(const int argc, const char *const *const argv)
+{
+	bool nonexisting_file = false;
+	vec<std::string> filenames;
+	vec<std::unique_ptr<std::ifstream>> uq_inputs;
+	vec<std::istream*> inputs;
+	for (int i = 1; i < argc; i++)
 	{
-		bool frst = true;
-		using std::cout;
-		for (const vec<int32_t>& snpout : out)
+		filenames.push_back(argv[i]);
+		uq_inputs.push_back(std::make_unique<std::ifstream>());
+		inputs.push_back(uq_inputs.back().get());
+		uq_inputs.back()->open(argv[i]);
+		if (!*uq_inputs.back())
 		{
-			if (!frst)
-				cout << "|";
-			frst = false;
-			cout << " ";
-			for (const int32_t val : snpout)
-				cout << val << " ";
+			std::cerr << "Error: Source file " << argv[i] << " doesn't exist." << std::endl;
+			nonexisting_file = true;
+			continue;
 		}
-		cout << '\n';
 	}
-	/*
-	JMMEScanner scn(&std::cin);
-	Snippet snippet;
-	JMMEParser prs(scn, snippet);
-	prs();
-	snippet.print(std::cout);
-	*/
+	if (nonexisting_file)
+	{
+		std::cout << "Terminating due to a non-existing source file." << std::endl;
+		return;
+	}
+	vec<ExecutionResult> results;
+	if (analyze(filenames, inputs, results, std::cerr))
+		return;
+	for (const ExecutionResult& res : results)
+	{
+		using std::cout;
+		if (std::holds_alternative<RegularExecutionResult>(res.result))
+		{
+			bool frst = true;
+			for (const vec<int32_t>& snpout : std::get<RegularExecutionResult>(res.result))
+			{
+				if (!frst)
+					cout << "|";
+				frst = false;
+				cout << " ";
+				for (const int32_t val : snpout)
+					cout << val << " ";
+			}
+			cout << '\n';
+		}
+		else
+		{
+			const ExceptedExecutionResult& eres = std::get<ExceptedExecutionResult>(res.result);
+			cout << "div by zero exception in thread " << eres.ex_thread << " (" << filenames[eres.ex_thread] << ") at line " << eres.ex_line << '\n';
+		}
+	}
 }
 
 }

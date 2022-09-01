@@ -50,8 +50,11 @@ class JMMEScanner;
 %token DOT
 %token ASSIGN
 %token<ArithmeticOpType> ASSIGN_OP
+%token PIPE
+%token AMPERSAND
+%token CARET
 
-%nterm<LocalValue> expression unary_expression multiplicative_expression
+%nterm<LocalValue> expression additive_expression unary_expression multiplicative_expression and_expression xor_expression
 
 %nterm statement static_call method_call assignment_statement assignment_op_statement incdec_statement
 
@@ -96,9 +99,24 @@ incdec_statement:
 	IDENT INCDEC_OP SEMIC { ctx.emit_op_write($1, LocalValue::from_literal(1), to_arithmetic_type($2), @1); }
 ;
 
+and_expression:
+	additive_expression
+	| and_expression AMPERSAND additive_expression { $$ = ctx.emit_arithmetic($1, $3, ArithmeticOpType::And, @1); }
+;
+
+xor_expression:
+	and_expression
+	| xor_expression CARET and_expression { $$ = ctx.emit_arithmetic($1, $3, ArithmeticOpType::Xor, @1); }
+;
+
 expression:
+	xor_expression
+	| expression PIPE xor_expression { $$ = ctx.emit_arithmetic($1, $3, ArithmeticOpType::Or, @1); }
+;
+
+additive_expression:
 	multiplicative_expression
-	| multiplicative_expression ADDITIVE_OP expression { $$ = ctx.emit_arithmetic($1, $3, to_arithmetic_type($2), @1); }
+	| additive_expression ADDITIVE_OP multiplicative_expression { $$ = ctx.emit_arithmetic($1, $3, to_arithmetic_type($2), @1); }
 ;
 
 multiplicative_expression:

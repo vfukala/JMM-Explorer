@@ -37,6 +37,9 @@ using token = JMMExplorer::JMMEParser::token;
 				else
 					yylval->build<uint32_t>(val); return token::INTLIT;
 				}
+&				{ return token::AMPERSAND; }
+\|				{ return token::PIPE; }
+\^				{ return token::CARET; }
 \(				{ return token::LPAREN; }
 \)				{ return token::RPAREN; }
 \.				{ return token::DOT; }

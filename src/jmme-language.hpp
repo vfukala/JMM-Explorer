@@ -14,7 +14,7 @@ typedef std::string Ident;
 
 enum class ArithmeticOpType
 {
-	Add, Subtract, Multiply, Divide, Modulo
+	Add, Subtract, Multiply, Divide, Modulo, Or, Xor, And
 };
 
 str get_mnemonic(ArithmeticOpType op_type);

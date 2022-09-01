@@ -19,6 +19,12 @@ str get_mnemonic(ArithmeticOpType op_type)
 			return "div";
 		case ArithmeticOpType::Modulo:
 			return "modulo";
+		case ArithmeticOpType::Or:
+			return "or";
+		case ArithmeticOpType::Xor:
+			return "xor";
+		case ArithmeticOpType::And:
+			return "and";
 		default:
 			assert(false);
 	}

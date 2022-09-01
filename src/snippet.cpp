@@ -452,6 +452,7 @@ void Snippet::exec_eval(const uint32_t instri)
 			if (v1 == 0)
 			{
 				zerodiv_excepted = true;
+				excepted_at_line = instr.location.begin.line;
 				return;
 			}
 			res = static_cast<int64_t>(v0) / v1;
@@ -461,10 +462,17 @@ void Snippet::exec_eval(const uint32_t instri)
 			if (v1 == 0)
 			{
 				zerodiv_excepted = true;
+				excepted_at_line = instr.location.begin.line;
 				return;
 			}
 			res = static_cast<int64_t>(v0) % v1;
 		}
+		else if (ari.op_type == ArithmeticOpType::Or)
+			res = v0 | v1;
+		else if (ari.op_type == ArithmeticOpType::Xor)
+			res = v0 ^ v1;
+		else if (ari.op_type == ArithmeticOpType::And)
+			res = v0 & v1;
 		else
 			assert(false);
 		instr_value[instri] = res;
@@ -540,6 +548,16 @@ void Snippet::supply_read_value(const uint32_t action_index, const int32_t value
 	assert(instructions[instri].is_read());
 	instr_evaluated[instri] = true;
 	instr_value[instri] = value;
+}
+
+bool Snippet::is_zerodiv_excepted() const
+{
+	return zerodiv_excepted;
+}
+
+uint32_t Snippet::get_excepted_line() const
+{
+	return excepted_at_line;
 }
 
 }

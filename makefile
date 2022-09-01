@@ -11,6 +11,9 @@ D_FILES += bin/parser.d bin/lexer.d
 bin/jmmexplorer: $(OBJ_FILES)
 	$(CXX) $(OBJ_FILES) -o bin/jmmexplorer $(LDFLAGS)
 
+bin/test_jmmexplorer: $(filter-out bin/main.o,$(OBJ_FILES)) bin/test_main.o
+	$(CXX) $(filter-out bin/main.o,$(OBJ_FILES)) bin/test_main.o -o bin/test_jmmexplorer $(LDFLAGS)
+
 bin/parser.cpp bin/parser.hpp: src/parser.yy
 	bison src/parser.yy --defines=bin/parser.hpp -o bin/parser.cpp
 
@@ -26,6 +29,9 @@ bin/%.d: src/%.cpp
 bin/%.o: src/%.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) src/$*.cpp -c -o $@
 
+bin/test_main.o: src/main.cpp
+	$(CXX) $(CPPFLAGS) -DTESTING $(CXXFLAGS) src/main.cpp -c -o bin/test_main.o
+
 bin/parser.d: bin/parser.cpp
 	@set -e; rm -f $@; \
 		$(CXX) -MM $(CPPFLAGS) $< > $@.$$$$; \
@@ -39,6 +45,3 @@ bin/lexer.d: bin/lexer.cpp
 		rm -f $@.$$$$
 
 include $(D_FILES)
-
-#$(info D_FILES is $(D_FILES))
-#$(info OBJ_FILES is $(OBJ_FILES))

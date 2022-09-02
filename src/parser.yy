@@ -54,7 +54,7 @@ class JMMEScanner;
 %token AMPERSAND
 %token CARET
 
-%nterm<LocalValue> expression additive_expression unary_expression multiplicative_expression and_expression xor_expression
+%nterm<LocalValue> expression additive_expression primary_expression prefix_expression multiplicative_expression and_expression xor_expression
 
 %nterm statement static_call method_call assignment_statement assignment_op_statement incdec_statement
 
@@ -120,11 +120,15 @@ additive_expression:
 ;
 
 multiplicative_expression:
-	unary_expression
-	| multiplicative_expression MULTIPLICATIVE_OP unary_expression { $$ = ctx.emit_arithmetic($1, $3, to_arithmetic_type($2), @1); }
+	prefix_expression
+	| multiplicative_expression MULTIPLICATIVE_OP primary_expression { $$ = ctx.emit_arithmetic($1, $3, to_arithmetic_type($2), @1); }
 ;
 
-unary_expression:
+prefix_expression:
+	primary_expression
+	| ADDITIVE_OP prefix_expression { $$ = ctx.emit_arithmetic(LocalValue::from_literal(0), $2, to_arithmetic_type($1), @1); }
+
+primary_expression:
 	INTLIT { $$ = LocalValue::from_literal($1); }
 	| IDENT { $$ = ctx.emit_read($1, @1); }
 	| LPAREN expression RPAREN { $$ = $2; }

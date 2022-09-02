@@ -313,34 +313,6 @@ const str& Snippet::get_name() const
 	return name;
 }
 
-/*
-const vec<int32_t>& Snippet::get_execution_results() const
-{
-	return output;
-}
-
-void Snippet::start_execution()
-{
-	local_state = vec<int64_t>(locals.size(), 0);
-	output.clear();
-	visibly_written.clear();
-	ipointer = 0;
-	actions_executed = 0;
-
-	keep_executing();
-}
-
-void Snippet::keep_executing()
-{
-
-	while (ipointer < instructions.size() && !instructions[ipointer].is_shared_read() && !instructions[ipointer].is_volatile_read())
-	{
-		const Instruction& instr = instructions[ipointer];
-		if (instr.is_arithmetic())
-	}
-}
-*/
-
 void Snippet::run_preexecution_analysis()
 {
 	// initialize argument_deps and trans_read_deps
@@ -415,9 +387,10 @@ void Snippet::run_preexecution_analysis()
 			}();
 			if (!data.is_literal())
 			{
-				const uint32_t written_from = local_written_at[data.get_local_id()];
+				const int32_t written_from = local_written_at[data.get_local_id()];
 				argument_deps[i].push_back(written_from);
-				trans_read_deps[i] = trans_read_deps[written_from];
+				if (written_from != -1)
+					trans_read_deps[i] = trans_read_deps[written_from];
 			}
 			if (instr.is_move())
 				local_written_at[instr.as_move().local_id] = i;
@@ -438,8 +411,8 @@ void Snippet::exec_eval(const uint32_t instri)
 	{
 		const ArithmeticInstruction& ari = instr.as_arithmetic();
 		uint32_t nex = 0;
-		const int32_t v0 = ari.op0.is_literal() ? ari.op0.get_literal() : instr_value[argument_deps[instri][nex++]];
-		const int32_t v1 = ari.op1.is_literal() ? ari.op1.get_literal() : instr_value[argument_deps[instri][nex]];
+		const int32_t v0 = ari.op0.is_literal() ? ari.op0.get_literal() : (nex++, argument_deps[instri][0] != -1 ? instr_value[argument_deps[instri][0]] : 0);
+		const int32_t v1 = ari.op1.is_literal() ? ari.op1.get_literal() : argument_deps[instri][nex] != -1 ? instr_value[argument_deps[instri][nex]] : 0;
 		int32_t res;
 		if (ari.op_type == ArithmeticOpType::Add)
 			res = static_cast<uint32_t>(v0) + static_cast<uint32_t>(v1);
@@ -487,7 +460,7 @@ void Snippet::exec_eval(const uint32_t instri)
 				return instr.as_move().data;
 			return instr.get_print_arg();
 		}();
-		instr_value[instri] = data.is_literal() ? data.get_literal() : instr_value[argument_deps[instri][0]];
+		instr_value[instri] = data.is_literal() ? data.get_literal() : argument_deps[instri][0] != -1 ? instr_value[argument_deps[instri][0]] : 0;
 	}
 	instr_evaluated[instri] = true;
 }
@@ -506,8 +479,12 @@ void Snippet::request_eval(const uint32_t instri)
 			exec_eval(cur.first);
 			st.pop();
 		}
-		else if (!instr_evaluated[argument_deps[cur.first][cur.second++]])
-			st.push({ argument_deps[cur.first][cur.second - 1], 0 });
+		else
+		{
+			const int32_t dep = argument_deps[cur.first][cur.second++];
+			if (dep != -1 && !instr_evaluated[dep])
+				st.push({ dep, 0 });
+		}
 	}
 }
 

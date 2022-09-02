@@ -180,6 +180,72 @@ void run_all_tests()
 		TestCase{ true, { "mother.lock();mother.unlock();m.lock();m.lock();m.lock();print(sx);m.unlock();sy=1;m.unlock();m.unlock();", "moo.lock();m.lock();moo.unlock();print(sy);sx=1;moo.lock();m.unlock();moo.unlock();" }, {
 			{ RegularExecutionResult{ { 0 }, { 1 } } },
 			{ RegularExecutionResult{ { 1 }, { 0 } } }
+		} },
+		// 18
+		TestCase{ true, { "print(-12*3|1);print(9^3);", "print(6/2*(1+2));" }, {
+			{ RegularExecutionResult{ { -35, 10 }, { 9 } } }
+		} },
+		// 19
+		TestCase{ true, { "print(s);", "s=1;" }, {
+			{ RegularExecutionResult{ { 0 }, { } } },
+			{ RegularExecutionResult{ { 1 }, { } } }
+		} },
+		// 20
+		TestCase{ true, { "s++;s++;print(s);", "s++;s++;print(s);" }, {
+			{ RegularExecutionResult{ { 1 }, { 1 } } },
+			{ RegularExecutionResult{ { 1 }, { 2 } } },
+			{ RegularExecutionResult{ { 1 }, { 3 } } },
+			{ RegularExecutionResult{ { 1 }, { 4 } } },
+			{ RegularExecutionResult{ { 2 }, { 1 } } },
+			{ RegularExecutionResult{ { 2 }, { 2 } } },
+			{ RegularExecutionResult{ { 2 }, { 3 } } },
+			{ RegularExecutionResult{ { 2 }, { 4 } } },
+			{ RegularExecutionResult{ { 3 }, { 1 } } },
+			{ RegularExecutionResult{ { 3 }, { 2 } } },
+			{ RegularExecutionResult{ { 3 }, { 3 } } },
+			{ RegularExecutionResult{ { 3 }, { 4 } } },
+			{ RegularExecutionResult{ { 4 }, { 1 } } },
+			{ RegularExecutionResult{ { 4 }, { 2 } } },
+			{ RegularExecutionResult{ { 4 }, { 3 } } },
+			{ RegularExecutionResult{ { 4 }, { 4 } } }
+		} },
+		// 21
+		TestCase{ true, { "v++;v++;print(v);", "v++;v++;print(v);" }, {
+			{ RegularExecutionResult{ { 1 }, { 2 } } },
+			{ RegularExecutionResult{ { 2 }, { 1 } } },
+			{ RegularExecutionResult{ { 2 }, { 2 } } },
+			{ RegularExecutionResult{ { 2 }, { 3 } } },
+			{ RegularExecutionResult{ { 2 }, { 4 } } },
+			{ RegularExecutionResult{ { 3 }, { 2 } } },
+			{ RegularExecutionResult{ { 3 }, { 3 } } },
+			{ RegularExecutionResult{ { 3 }, { 4 } } },
+			{ RegularExecutionResult{ { 4 }, { 2 } } },
+			{ RegularExecutionResult{ { 4 }, { 3 } } },
+			{ RegularExecutionResult{ { 4 }, { 4 } } }
+		} },
+		// 22
+		TestCase{ true, { "m.lock();s++;m.unlock();m.lock();s++;m.unlock();m.lock();print(s);m.unlock();", "m.lock();s++;m.unlock();m.lock();s++;m.unlock();m.lock();print(s);m.unlock();" }, {
+			{ RegularExecutionResult{ { 2 }, { 4 } } },
+			{ RegularExecutionResult{ { 3 }, { 4 } } },
+			{ RegularExecutionResult{ { 4 }, { 2 } } },
+			{ RegularExecutionResult{ { 4 }, { 3 } } },
+			{ RegularExecutionResult{ { 4 }, { 4 } } }
+		} },
+		// 23
+		TestCase{ true, { "l=32;l_s=s;l-=7*l_s*(l_s-5);print(l);", "l++;l*=2;l*=l;v=l|3;l*=l;print(l);", "l=3;s=5;l%=6;l*=l+l*l;print(l);" }, {
+			{ RegularExecutionResult{ { 32 }, { 16 }, { 36 } } }
+		} },
+		// 24
+		TestCase{ true, { "print(s*s);", "s=-1;s=1;" }, {
+			{ RegularExecutionResult{ { -1 }, { } } },
+			{ RegularExecutionResult{ { 0 }, { } } },
+			{ RegularExecutionResult{ { 1 }, { } } }
+		} },
+		// 25
+		TestCase{ true, { "print(v0/v1);", "v0+=563;v1+=7;" }, {
+			{ RegularExecutionResult{ { 0 }, { } } },
+			{ RegularExecutionResult{ { 80 }, { } } },
+			{ ExceptedExecutionResult{ 0, 1 } }
 		} }
 	};
 	uint32_t errored_count = 0;

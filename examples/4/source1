@@ -1,0 +1,9 @@
+m.lock();
+s++;
+m.unlock();
+m.lock();
+s++;
+m.unlock();
+m.lock();
+print(s);
+m.unlock();

@@ -38,8 +38,8 @@ using token = JMMExplorer::JMMEParser::token;
 					yylval->build<uint32_t>(val); return token::INTLIT;
 				}
 &				{ return token::AMPERSAND; }
-\|				{ return token::PIPE; }
 \^				{ return token::CARET; }
+\|				{ return token::PIPE; }
 \(				{ return token::LPAREN; }
 \)				{ return token::RPAREN; }
 \.				{ return token::DOT; }
@@ -49,6 +49,9 @@ using token = JMMExplorer::JMMEParser::token;
 \*=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::Multiply); return token::ASSIGN_OP; }
 \/=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::Divide); return token::ASSIGN_OP; }
 %=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::Modulo); return token::ASSIGN_OP; }
+&=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::And); return token::ASSIGN_OP; }
+\^=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::Xor); return token::ASSIGN_OP; }
+\|=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::Or); return token::ASSIGN_OP; }
 [ \t\v\r\n]		{ }
 .				{ std::cerr << "Unrecognized character \'" << YYText() << "\'." << std::endl; }
 %%

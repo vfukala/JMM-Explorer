@@ -45,7 +45,7 @@ void ExecutionResult::print(std::ostream& os, const std::function<std::string(ui
 	else
 	{
 		const ExceptedExecutionResult& eres = std::get<ExceptedExecutionResult>(result);
-		os << "div by zero exception in thread " << eres.ex_thread << " (" << thread_name_fetcher(eres.ex_thread) << ") at line " << eres.ex_line;
+		os << "division by zero exception in thread " << eres.ex_thread << " (" << thread_name_fetcher(eres.ex_thread) << ") at line " << eres.ex_line;
 	}
 }
 
@@ -260,8 +260,8 @@ bool analyze(const vec<std::string>& filenames, const vec<std::istream*>& inputs
 						int32_t latest_write = -1;
 						for (uint32_t j = 0; j < synaction_count; j++)
 						{
-							const Instruction& action = get_action(so[j]);
-							if (action.is_volatile_write() && action.get_volatile_name() == action.get_volatile_name())
+							const Instruction& waction = get_action(so[j]);
+							if (waction.is_volatile_write() && waction.get_volatile_name() == action.get_volatile_name())
 								latest_write = so[j];
 							else if (so[j] == i)
 								break;

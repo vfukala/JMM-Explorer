@@ -1,3 +1,0 @@
-local = 41;
-local++;
-print(local);

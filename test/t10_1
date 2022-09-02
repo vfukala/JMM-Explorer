@@ -1,4 +1,0 @@
-vcounter++;
-vcounter++;
-vcounter++;
-print(vcounter);

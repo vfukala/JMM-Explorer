@@ -1,5 +1,0 @@
-l1 = sx;
-l2 = l1 | 1;
-sy = l2;
-print(l1);
-print(l2);

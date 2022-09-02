@@ -1,3 +1,0 @@
-l0 = sz;
-sx = l0;
-print(l0);

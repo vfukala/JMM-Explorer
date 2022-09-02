@@ -1,4 +1,0 @@
-scounter++;
-scounter++;
-scounter++;
-print(scounter);

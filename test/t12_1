@@ -1,3 +1,0 @@
-l3 = sy;
-sx = l3;
-print(l3);

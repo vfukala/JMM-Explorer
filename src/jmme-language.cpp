@@ -17,8 +17,8 @@ str get_mnemonic(ArithmeticOpType op_type)
 			return "mul";
 		case ArithmeticOpType::Divide:
 			return "div";
-		case ArithmeticOpType::Modulo:
-			return "modulo";
+		case ArithmeticOpType::Remainder:
+			return "rem";
 		case ArithmeticOpType::Or:
 			return "or";
 		case ArithmeticOpType::Xor:

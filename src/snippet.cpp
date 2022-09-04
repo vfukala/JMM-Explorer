@@ -38,7 +38,6 @@ void Snippet::emit_method_call(const Ident& object_name, const Ident& method_nam
 {
 	assert(!object_name.empty() && object_name[0] == 'm');
 	assert(method_name == "lock" || method_name == "unlock");
-	used_monitors.insert(object_name);
 	if (method_name == "lock")
 		instructions.push_back({ LockInstruction{ object_name }, loc });
 	else
@@ -76,7 +75,6 @@ LocalValue Snippet::emit_read(const Ident& var_name, const ILoc loc)
 	}
 	else
 	{
-		(ch0 == 's' ? used_shareds : used_volatiles).insert(var_name);
 		const size_t local_id = allocate_temporary();
 		instructions.push_back(ch0 == 's' ? Instruction{ SharedReadInstruction{ local_id, var_name }, loc }  : Instruction{ VolatileReadInstruction{ local_id, var_name }, loc });
 		pushed_action();
@@ -99,7 +97,6 @@ void Snippet::emit_write(const Ident& target_name, const LocalValue data, const 
 	}
 	else
 	{
-		(ch0 == 's' ? used_shareds : used_volatiles).insert(target_name);
 		instructions.push_back(ch0 == 's' ? Instruction{ SharedWriteInstruction{ target_name, data }, loc } : Instruction{ VolatileWriteInstruction{ target_name, data }, loc });
 		pushed_action();
 	}
@@ -327,7 +324,9 @@ void Snippet::run_preexecution_analysis()
 			trans_read_deps[i].push_back(nact);
 	}
 
+	// for each local variable, the index of the instruction that last wrote to it or -1 if none has yet
 	vec<int32_t> local_written_at(locals.size(), -1);
+
 	for (uint32_t i = 0; i < instructions.size(); i++)
 	{
 		const Instruction& instr = instructions[i];
@@ -343,8 +342,11 @@ void Snippet::run_preexecution_analysis()
 			if (!ari.op1.is_literal())
 			{
 				argument_deps[i].push_back(local_written_at[ari.op1.get_local_id()]);
+
 				if (argument_deps[i].back() != -1)
 				{
+					// merge of two sorted arrays (the transitive read dependencies of the first and of the second operand)
+					
 					vec<uint32_t> nwtransdp;
 					uint32_t p0 = 0, p1 = 0;
 					vec<uint32_t> &d0 = trans_read_deps[i], &d1 = trans_read_deps[argument_deps[i].back()];
@@ -430,7 +432,7 @@ void Snippet::exec_eval(const uint32_t instri)
 			}
 			res = static_cast<int64_t>(v0) / v1;
 		}
-		else if (ari.op_type == ArithmeticOpType::Modulo)
+		else if (ari.op_type == ArithmeticOpType::Remainder)
 		{
 			if (v1 == 0)
 			{
@@ -469,13 +471,20 @@ void Snippet::request_eval(const uint32_t instri)
 {
 	if (instr_evaluated[instri])
 		return;
+
+	// stack of instruction to go through: in each pair
+	// -- the first element is the instruction index
+	// -- the second element is the next index in the instruction's argument dependencies that should be visited
 	std::stack<std::pair<uint32_t, uint32_t>> st;
+
 	st.push({ instri, 0 });
 	while (!st.empty())
 	{
 		auto& cur = st.top();
 		if (cur.second == argument_deps[cur.first].size())
 		{
+			// all argument dependencies have been visited and resolved, we can evaluate the instruction currently at the top of the stack
+
 			exec_eval(cur.first);
 			st.pop();
 		}

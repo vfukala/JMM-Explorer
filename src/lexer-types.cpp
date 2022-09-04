@@ -18,8 +18,8 @@ ArithmeticOpType to_arithmetic_type(const MultiplicativeOpType op_type)
 			return ArithmeticOpType::Multiply;
 		case MultiplicativeOpType::Divide:
 			return ArithmeticOpType::Divide;
-		case MultiplicativeOpType::Modulo:
-			return ArithmeticOpType::Modulo;
+		case MultiplicativeOpType::Remainder:
+			return ArithmeticOpType::Remainder;
 	}
 	assert(false);
 }

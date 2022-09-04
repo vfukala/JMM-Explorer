@@ -12,8 +12,13 @@ namespace JMMExplorer
 
 struct TestCase
 {
+	/// true iff our program is expected not only to produce a set of legals outputs, but to also produce the complete set of all legal results
 	bool require_all;
+
+	/// each entry of this vector is the source code for one thread
 	vec<std::string> sources;
+	
+	/// all possible execution results allowed by the JMM -- should be precomputed by hand, so that we can check against this
 	vec<ExecutionResult> results;
 };
 
@@ -248,8 +253,13 @@ void run_all_tests()
 			{ ExceptedExecutionResult{ 0, 1 } }
 		} }
 	};
+
+	// number of cases where our program considered the source code to be ill formed (it is never supposed to be, so this count should remain at zero if our program is correct)
 	uint32_t errored_count = 0;
+
+	// number of cases where our program didn't consider the source code to be ill formed, but it produced an incorrect set of possible results
 	uint32_t wrong_answer_count = 0;
+
 	for (uint32_t i = 0; i < tcases.size(); i++)
 	{
 		const TestCase& tcase = tcases[i];

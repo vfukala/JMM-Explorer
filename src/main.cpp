@@ -9,7 +9,8 @@
 namespace JMMExplorer
 {
 
-void run(const int argc, const char *const *const argv)
+/// Runs the primary application with the given command-line arguments
+static void run(const int argc, const char *const *const argv)
 {
 	bool nonexisting_file = false;
 	vec<std::string> filenames;

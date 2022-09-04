@@ -3,6 +3,7 @@
 
 #include <vector>
 
+/// a shorter name for std::vector
 template<typename T>
 using vec = std::vector<T>;
 

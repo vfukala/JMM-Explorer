@@ -3,6 +3,7 @@
 
 #include <string>
 
+/// a string type
 using str = std::string;
 
 #endif // STR_HPP

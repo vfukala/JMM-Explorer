@@ -1,6 +1,7 @@
 #include "analysis.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <limits>
 
 #include "jmme-scanner.hpp"

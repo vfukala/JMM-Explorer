@@ -27,7 +27,7 @@ using token = JMMExplorer::JMMEParser::token;
 \-				{ yylval->build<AdditiveOpType>(AdditiveOpType::Subtract); return token::ADDITIVE_OP; }
 \*				{ yylval->build<MultiplicativeOpType>(MultiplicativeOpType::Multiply); return token::MULTIPLICATIVE_OP; }
 \/				{ yylval->build<MultiplicativeOpType>(MultiplicativeOpType::Divide); return token::MULTIPLICATIVE_OP; }
-%				{ yylval->build<MultiplicativeOpType>(MultiplicativeOpType::Modulo); return token::MULTIPLICATIVE_OP; }
+%				{ yylval->build<MultiplicativeOpType>(MultiplicativeOpType::Remainder); return token::MULTIPLICATIVE_OP; }
 [a-zA-Z\$]|([a-zA-Z\$_][a-zA-Z\$_0-9]*)		{ yylval->build<Ident>(YYText()); return token::IDENT; }
 [0-9]+			{
 				const char *const tok = YYText();
@@ -48,7 +48,7 @@ using token = JMMExplorer::JMMEParser::token;
 \-=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::Subtract); return token::ASSIGN_OP; }
 \*=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::Multiply); return token::ASSIGN_OP; }
 \/=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::Divide); return token::ASSIGN_OP; }
-%=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::Modulo); return token::ASSIGN_OP; }
+%=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::Remainder); return token::ASSIGN_OP; }
 &=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::And); return token::ASSIGN_OP; }
 \^=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::Xor); return token::ASSIGN_OP; }
 \|=				{ yylval->build<ArithmeticOpType>(ArithmeticOpType::Or); return token::ASSIGN_OP; }
